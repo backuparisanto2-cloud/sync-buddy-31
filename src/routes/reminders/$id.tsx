@@ -56,10 +56,35 @@ function EditReminder() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-semibold sm:text-3xl">Ubah reminder</h1>
-      <p className="mt-1 mb-6 text-sm text-muted-foreground">
-        Perbarui isi pesan, jadwal, atau lampiran.
-      </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold sm:text-3xl">Ubah reminder</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Perbarui isi pesan, jadwal, atau lampiran.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          className="rounded-full"
+          disabled={sendingNow}
+          onClick={async () => {
+            setSendingNow(true);
+            try {
+              const res = await sendNow({ data: { id } });
+              if (res.ok) toast.success("Email pengingat terkirim");
+              else toast.error(res.error ?? "Gagal mengirim");
+            } catch (e) {
+              toast.error((e as Error).message);
+            } finally {
+              setSendingNow(false);
+            }
+          }}
+        >
+          {sendingNow ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Tes kirim sekarang
+        </Button>
+      </div>
+
 
       {query.isLoading ? (
         <div className="grid gap-4 lg:grid-cols-2">
