@@ -181,6 +181,7 @@ export type Database = {
       }
       send_logs: {
         Row: {
+          duration_ms: number | null
           error: string | null
           id: string
           occurrence_at: string | null
@@ -188,10 +189,14 @@ export type Database = {
           reminder_id: string | null
           reminder_title: string | null
           sent_at: string
+          smtp_code: number | null
+          smtp_response: string | null
+          smtp_stage: string | null
           status: string
           trigger_source: string
         }
         Insert: {
+          duration_ms?: number | null
           error?: string | null
           id?: string
           occurrence_at?: string | null
@@ -199,10 +204,14 @@ export type Database = {
           reminder_id?: string | null
           reminder_title?: string | null
           sent_at?: string
+          smtp_code?: number | null
+          smtp_response?: string | null
+          smtp_stage?: string | null
           status?: string
           trigger_source?: string
         }
         Update: {
+          duration_ms?: number | null
           error?: string | null
           id?: string
           occurrence_at?: string | null
@@ -210,6 +219,9 @@ export type Database = {
           reminder_id?: string | null
           reminder_title?: string | null
           sent_at?: string
+          smtp_code?: number | null
+          smtp_response?: string | null
+          smtp_stage?: string | null
           status?: string
           trigger_source?: string
         }

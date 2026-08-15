@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Send } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { History, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -88,6 +88,11 @@ function EditReminder() {
         >
           {sendingNow ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           Tes kirim sekarang
+        </Button>
+        <Button asChild variant="ghost" size="sm" className="rounded-full">
+          <Link to="/logs" search={{ reminder: id }}>
+            <History className="h-4 w-4" /> Lihat log pengingat ini
+          </Link>
         </Button>
       </div>
 
