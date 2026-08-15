@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs text-muted-foreground sm:px-6">
-        Pengingat email terjadwal · zona waktu Asia/Jakarta
+        Pengingat email terjadwal · zona waktu dan interval diatur di halaman Setelan
       </footer>
     </div>
   );
