@@ -291,7 +291,45 @@ function SmtpPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+                <div className="col-span-2 flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center">
+                  <Input
+                    type="email"
+                    placeholder="email tujuan untuk uji kirim"
+                    value={testTo[p.id] ?? ""}
+                    onChange={(e) => setTestTo({ ...testTo, [p.id]: e.target.value })}
+                    className="sm:max-w-xs"
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="rounded-full"
+                    disabled={sending === p.id}
+                    onClick={async () => {
+                      const to = (testTo[p.id] ?? "").trim();
+                      if (!to) return toast.error("Isi alamat email tujuan dulu");
+                      setSending(p.id);
+                      try {
+                        const res = await sendTest({ data: { id: p.id, to } });
+                        if (res.ok) toast.success(`Email uji terkirim ke ${to}`);
+                        else toast.error(res.error ?? "Gagal mengirim email uji");
+                      } catch (e) {
+                        toast.error((e as Error).message);
+                      } finally {
+                        setSending(null);
+                        qc.invalidateQueries({ queryKey: ["smtp"] });
+                      }
+                    }}
+                  >
+                    {sending === p.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    Kirim email uji
+                  </Button>
+                </div>
               </CardContent>
+
             </Card>
           ))}
           {profiles.data?.length === 0 ? (
