@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Loader2, Send } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@/lib/app.functions";
 import { AppShell } from "@/components/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReminderForm, emptyReminder, type ReminderFormValues } from "@/components/ReminderForm";
-import { fetchReminder } from "@/lib/app.functions";
+import { fetchReminder, sendReminderNow } from "@/lib/app.functions";
 
 export const Route = createFileRoute("/reminders/$id")({
   head: () => ({
@@ -28,6 +32,8 @@ export const Route = createFileRoute("/reminders/$id")({
 function EditReminder() {
   const { id } = Route.useParams();
   const load = useServerFn(fetchReminder);
+  const sendNow = useServerFn(sendReminderNow);
+  const [sendingNow, setSendingNow] = useState(false);
   const query = useQuery({ queryKey: ["reminder", id], queryFn: () => load({ data: { id } }) });
 
   type ScheduleRow = {
