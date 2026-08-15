@@ -79,6 +79,15 @@ export async function fetchReminders() {
   });
 }
 
+export type LogFilters = {
+  reminderId?: string | null;
+  status?: "all" | "success" | "failed";
+  source?: "all" | "auto" | "manual" | "test";
+  search?: string;
+  limit?: number;
+  offset?: number;
+};
+
 export async function fetchLogs(limit = 200) {
   return (
     unwrap(
@@ -90,6 +99,28 @@ export async function fetchLogs(limit = 200) {
     ) ?? []
   );
 }
+
+export async function fetchLogsFiltered({ data }: { data: LogFilters }) {
+  const limit = data.limit ?? 50;
+  const offset = data.offset ?? 0;
+  let q = supabase
+    .from("send_logs")
+    .select("*")
+    .order("sent_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (data.reminderId) q = q.eq("reminder_id", data.reminderId);
+  if (data.status && data.status !== "all") q = q.eq("status", data.status);
+  if (data.source && data.source !== "all") q = q.eq("trigger_source", data.source);
+  const search = (data.search ?? "").trim();
+  if (search) {
+    const safe = search.replace(/[%,]/g, " ");
+    q = q.or(`recipients.ilike.%${safe}%,reminder_title.ilike.%${safe}%`);
+  }
+
+  return unwrap(await q) ?? [];
+}
+
 
 export async function fetchDashboard() {
   const reminders = await fetchReminders();
