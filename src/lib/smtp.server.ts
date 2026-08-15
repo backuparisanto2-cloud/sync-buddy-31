@@ -235,11 +235,40 @@ async function readReply(conn: Conn): Promise<{ code: number; text: string }> {
   return { code: Number.isNaN(code) ? 0 : code, text };
 }
 
-async function command(conn: Conn, cmd: string, expect: number[]): Promise<string> {
+export class SmtpError extends Error {
+  code: number;
+  stage: string;
+  response: string;
+  constructor(message: string, opts: { code: number; stage: string; response: string }) {
+    super(message);
+    this.name = "SmtpError";
+    this.code = opts.code;
+    this.stage = opts.stage;
+    this.response = opts.response;
+  }
+}
+
+export interface SmtpReply {
+  code: number;
+  response: string;
+  stage: string;
+}
+
+async function command(
+  conn: Conn,
+  cmd: string,
+  expect: number[],
+  stage?: string,
+): Promise<string> {
   await conn.write(cmd + "\r\n");
   const { code, text } = await readReply(conn);
+  const label = stage ?? (cmd.split(" ")[0] || "SMTP");
   if (!expect.includes(code)) {
-    throw new Error(`SMTP ${cmd.split(" ")[0]} gagal: ${text || "tidak ada balasan"}`);
+    throw new SmtpError(`SMTP ${label} gagal: ${text || "tidak ada balasan"}`, {
+      code,
+      stage: label,
+      response: text,
+    });
   }
   return text;
 }
@@ -253,7 +282,13 @@ function b64(value: string): string {
 
 async function handshake(conn: Conn, cfg: SmtpConfig): Promise<string> {
   const greeting = await readReply(conn);
-  if (greeting.code !== 220) throw new Error(`Server menolak koneksi: ${greeting.text}`);
+  if (greeting.code !== 220) {
+    throw new SmtpError(`Server menolak koneksi: ${greeting.text}`, {
+      code: greeting.code,
+      stage: "CONNECT",
+      response: greeting.text,
+    });
+  }
 
   let ehlo = await command(conn, `EHLO ${cfg.host}`, [250]);
 
@@ -265,42 +300,50 @@ async function handshake(conn: Conn, cfg: SmtpConfig): Promise<string> {
 
   if (cfg.username) {
     if (/AUTH[ -=].*PLAIN/i.test(ehlo)) {
-      await command(conn, `AUTH PLAIN ${b64(`\u0000${cfg.username}\u0000${cfg.password}`)}`, [235]);
+      await command(conn, `AUTH PLAIN ${b64(`\u0000${cfg.username}\u0000${cfg.password}`)}`, [235], "AUTH");
     } else {
-      await command(conn, "AUTH LOGIN", [334]);
-      await command(conn, b64(cfg.username), [334]);
-      await command(conn, b64(cfg.password), [235]);
+      await command(conn, "AUTH LOGIN", [334], "AUTH");
+      await command(conn, b64(cfg.username), [334], "AUTH");
+      await command(conn, b64(cfg.password), [235], "AUTH");
     }
   }
   return ehlo;
 }
 
-export async function testSmtp(cfg: SmtpConfig): Promise<void> {
+export async function testSmtp(cfg: SmtpConfig): Promise<SmtpReply> {
   const conn = await openConnection(cfg);
   try {
     await handshake(conn, cfg);
-    await command(conn, "QUIT", [221, 250]);
+    const response = await command(conn, "QUIT", [221, 250], "QUIT");
+    return { code: Number.parseInt(response.slice(0, 3), 10) || 221, response, stage: "QUIT" };
   } finally {
     await conn.close();
   }
 }
 
-export async function sendMail(cfg: SmtpConfig, msg: MailMessage): Promise<void> {
+export async function sendMail(cfg: SmtpConfig, msg: MailMessage): Promise<SmtpReply> {
   const conn = await openConnection(cfg);
   try {
     await handshake(conn, cfg);
-    await command(conn, `MAIL FROM:<${msg.from}>`, [250]);
+    await command(conn, `MAIL FROM:<${msg.from}>`, [250], "MAIL FROM");
     const rcpts = [...msg.to, ...(msg.cc ?? []), ...(msg.bcc ?? [])].filter(Boolean);
     if (rcpts.length === 0) throw new Error("Tidak ada penerima");
     for (const rcpt of rcpts) {
-      await command(conn, `RCPT TO:<${rcpt}>`, [250, 251]);
+      await command(conn, `RCPT TO:<${rcpt}>`, [250, 251], "RCPT TO");
     }
-    await command(conn, "DATA", [354]);
+    await command(conn, "DATA", [354], "DATA");
     const body = msg.raw.replace(/\r?\n/g, "\r\n").replace(/\r\n\./g, "\r\n..");
     await conn.write(body + "\r\n.\r\n");
     const done = await readReply(conn);
-    if (done.code !== 250) throw new Error(`Pengiriman ditolak: ${done.text}`);
-    await command(conn, "QUIT", [221, 250]);
+    if (done.code !== 250) {
+      throw new SmtpError(`Pengiriman ditolak: ${done.text}`, {
+        code: done.code,
+        stage: "DATA",
+        response: done.text,
+      });
+    }
+    await command(conn, "QUIT", [221, 250], "QUIT");
+    return { code: done.code, response: done.text, stage: "DATA" };
   } finally {
     await conn.close();
   }
