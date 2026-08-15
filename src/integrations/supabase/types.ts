@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          catchup_hours: number
+          check_interval_minutes: number
+          created_at: string
+          default_timezone: string
+          id: string
+          scheduler_enabled: boolean
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          catchup_hours?: number
+          check_interval_minutes?: number
+          created_at?: string
+          default_timezone?: string
+          id?: string
+          scheduler_enabled?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          catchup_hours?: number
+          check_interval_minutes?: number
+          created_at?: string
+          default_timezone?: string
+          id?: string
+          scheduler_enabled?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reminder_attachments: {
         Row: {
           created_at: string
@@ -246,7 +279,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reschedule_dispatch: { Args: { _minutes: number }; Returns: string }
     }
     Enums: {
       [_ in never]: never
