@@ -166,10 +166,67 @@ export async function sendReminder(
   }
 }
 
+/** Send a one-off test email through a profile, to an arbitrary address. */
+export async function sendTestEmail(profileId: string, to: string) {
+  const cfg = await loadSmtp(profileId);
+  const subject = "Email uji dari Reminder Mail";
+  const body =
+    `Ini adalah email uji yang dikirim melalui profil SMTP "${cfg.name}".\n\n` +
+    `Waktu kirim: ${new Date().toISOString()}`;
+  const logBase = {
+    reminder_id: null,
+    reminder_title: `Email uji — ${cfg.name}`,
+    occurrence_at: null,
+    recipients: to,
+    trigger_source: "test" as const,
+  };
+  try {
+    const raw = buildMime({
+      from: cfg.from_email,
+      fromName: cfg.from_name,
+      to: [to],
+      subject,
+      body,
+      attachments: [],
+    });
+    await sendMail(cfg, { from: cfg.from_email, to: [to], raw });
+    await supabaseAdmin.from("send_logs").insert({ ...logBase, status: "success" });
+    await supabaseAdmin
+      .from("smtp_profiles")
+      .update({ last_status: "success", last_tested_at: new Date().toISOString() })
+      .eq("id", profileId);
+    return { ok: true as const };
+  } catch (e) {
+    const message = (e as Error).message ?? "Gagal mengirim";
+    await supabaseAdmin.from("send_logs").insert({ ...logBase, status: "failed", error: message });
+    return { ok: false as const, error: message };
+  }
+}
+
+export async function loadSettings() {
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("*")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return {
+    default_timezone: data?.default_timezone ?? "Asia/Jakarta",
+    check_interval_minutes: data?.check_interval_minutes ?? 1,
+    catchup_hours: data?.catchup_hours ?? 6,
+    scheduler_enabled: data?.scheduler_enabled ?? true,
+  };
+}
+
 /** Send every schedule occurrence that has come due and has not been sent yet. */
 export async function dispatchDue() {
+  const settings = await loadSettings();
+  if (!settings.scheduler_enabled) {
+    return { sent: 0, failed: 0, skipped: "scheduler-disabled" as const };
+  }
+
   const now = Date.now();
-  const windowStart = now - 6 * 60 * 60 * 1000; // catch up to 6 hours late
+  const windowStart = now - Math.max(1, settings.catchup_hours) * 60 * 60 * 1000;
   const { data: reminders } = await supabaseAdmin
     .from("reminders")
     .select("id, timezone, reminder_schedules(*)")
@@ -180,9 +237,10 @@ export async function dispatchDue() {
   for (const reminder of reminders ?? []) {
     const schedules = ((reminder as never as { reminder_schedules: ScheduleRow[] })
       .reminder_schedules ?? []) as ScheduleRow[];
-    const due = occurrencesFor(schedules, reminder.timezone ?? "Asia/Jakarta").filter(
-      (d) => d.getTime() <= now && d.getTime() >= windowStart,
-    );
+    const due = occurrencesFor(
+      schedules,
+      reminder.timezone ?? settings.default_timezone,
+    ).filter((d) => d.getTime() <= now && d.getTime() >= windowStart);
     for (const occurrence of due) {
       const iso = occurrence.toISOString();
       const { data: existing } = await supabaseAdmin
@@ -199,3 +257,4 @@ export async function dispatchDue() {
   }
   return { sent, failed };
 }
+
