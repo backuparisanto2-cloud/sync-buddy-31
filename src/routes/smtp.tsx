@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@/lib/app.functions";
-import { CheckCircle2, Loader2, Plus, Server, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Plus, Send, Server, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   fetchSmtpProfiles,
   removeSmtpProfile,
   testSmtpProfile,
+  sendTestEmailNow,
   upsertSmtpProfile,
 } from "@/lib/app.functions";
 import { formatDateTime } from "@/lib/format";
@@ -73,6 +74,9 @@ function SmtpPage() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
+  const [sending, setSending] = useState<string | null>(null);
+  const [testTo, setTestTo] = useState<Record<string, string>>({});
+  const sendTest = useServerFn(sendTestEmailNow);
 
   const profiles = useQuery({ queryKey: ["smtp"], queryFn: () => list() });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
@@ -306,7 +310,10 @@ function SmtpPage() {
                     disabled={sending === p.id}
                     onClick={async () => {
                       const to = (testTo[p.id] ?? "").trim();
-                      if (!to) return toast.error("Isi alamat email tujuan dulu");
+                      if (!to) {
+                        toast.error("Isi alamat email tujuan dulu");
+                        return;
+                      }
                       setSending(p.id);
                       try {
                         const res = await sendTest({ data: { id: p.id, to } });
