@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Rocket, Terminal, UploadCloud, Database, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
-import { BACKEND_URL } from "@/lib/backend";
+import { backendUrl } from "@/lib/backend";
 
 export const Route = createFileRoute("/deploy")({
   head: () => ({
@@ -90,7 +90,7 @@ function DeployPage() {
         <Step icon={Database} title="3. Arahkan ke backend yang ada">
           <p>Buat berkas .env sebelum build agar frontend tetap terhubung ke data Anda:</p>
           <Code>
-            {`VITE_SUPABASE_URL=<url backend>\nVITE_SUPABASE_PUBLISHABLE_KEY=<kunci publik>\nVITE_BACKEND_URL=${BACKEND_URL}`}
+            {`VITE_SUPABASE_URL=<url backend>\nVITE_SUPABASE_PUBLISHABLE_KEY=<kunci publik>\nVITE_BACKEND_URL=${backendUrl()}`}
           </Code>
           <p>
             <strong>VITE_BACKEND_URL</strong> dipakai untuk pengiriman email SMTP dan uji koneksi,

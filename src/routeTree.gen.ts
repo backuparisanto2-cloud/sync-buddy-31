@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SmtpRouteImport } from './routes/smtp'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeployRoute = DeployRouteImport.update({
+  id: '/deploy',
+  path: '/deploy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogsRoute = LogsRouteImport.update({
@@ -80,6 +86,7 @@ const ApiPublicMailTestSendRoute = ApiPublicMailTestSendRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/deploy': typeof DeployRoute
   '/logs': typeof LogsRoute
   '/settings': typeof SettingsRoute
   '/smtp': typeof SmtpRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/deploy': typeof DeployRoute
   '/logs': typeof LogsRoute
   '/settings': typeof SettingsRoute
   '/smtp': typeof SmtpRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/deploy': typeof DeployRoute
   '/logs': typeof LogsRoute
   '/settings': typeof SettingsRoute
   '/smtp': typeof SmtpRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/deploy'
     | '/logs'
     | '/settings'
     | '/smtp'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/deploy'
     | '/logs'
     | '/settings'
     | '/smtp'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/deploy'
     | '/logs'
     | '/settings'
     | '/smtp'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DeployRoute: typeof DeployRoute
   LogsRoute: typeof LogsRoute
   SettingsRoute: typeof SettingsRoute
   SmtpRoute: typeof SmtpRoute
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deploy': {
+      id: '/deploy'
+      path: '/deploy'
+      fullPath: '/deploy'
+      preLoaderRoute: typeof DeployRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/logs': {
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DeployRoute: DeployRoute,
   LogsRoute: LogsRoute,
   SettingsRoute: SettingsRoute,
   SmtpRoute: SmtpRoute,
