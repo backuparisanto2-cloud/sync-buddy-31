@@ -90,11 +90,34 @@ function DeployPage() {
         <Step icon={Database} title="3. Arahkan ke backend yang ada">
           <p>Buat berkas .env sebelum build agar frontend tetap terhubung ke data Anda:</p>
           <Code>
-            {`VITE_SUPABASE_URL=<url backend>\nVITE_SUPABASE_PUBLISHABLE_KEY=<kunci publik>\nVITE_BACKEND_URL=${backendUrl()}`}
+            {`VITE_SUPABASE_URL=https://abcdefghijklmno.supabase.co\nVITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_AbC123dEf456GhI789jkl_00-XyZ\nVITE_SUPABASE_PROJECT_ID=abcdefghijklmno\nVITE_BACKEND_URL=${backendUrl()}`}
           </Code>
+          <p>Contoh di atas memakai nilai dummy. Ambil nilai asli dari panel backend Anda.</p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <strong>VITE_SUPABASE_URL</strong> — alamat API backend, bentuknya{" "}
+              <em>https://&lt;id-project&gt;.supabase.co</em>.
+            </li>
+            <li>
+              <strong>VITE_SUPABASE_PUBLISHABLE_KEY</strong> — kunci publik (anon). Aman ikut
+              ter-build karena akses data dibatasi aturan baris (RLS). Format lama{" "}
+              <em>eyJhbGciOi…</em> juga berlaku.
+            </li>
+            <li>
+              <strong>VITE_SUPABASE_PROJECT_ID</strong> — opsional, bagian subdomain dari URL.
+            </li>
+            <li>
+              <strong>VITE_BACKEND_URL</strong> — dipakai untuk pengiriman email SMTP dan uji
+              koneksi, yang harus tetap berjalan di server (tidak bisa dari browser).
+            </li>
+          </ul>
+          <p className="text-destructive">
+            Jangan pernah menaruh service role key atau kata sandi database pada build statis —
+            semua isi berkas VITE_ bisa dibaca pengunjung.
+          </p>
           <p>
-            <strong>VITE_BACKEND_URL</strong> dipakai untuk pengiriman email SMTP dan uji koneksi,
-            yang harus tetap berjalan di server (tidak bisa dari browser).
+            Di panel backend, tambahkan domain hosting Anda ke <strong>Site URL</strong> dan{" "}
+            <strong>Redirect URLs</strong> agar proses masuk tidak gagal.
           </p>
         </Step>
 
