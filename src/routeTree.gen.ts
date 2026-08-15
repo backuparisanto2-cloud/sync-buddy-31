@@ -18,6 +18,7 @@ import { Route as RemindersNewRouteImport } from './routes/reminders/new'
 import { Route as ApiPublicCronDispatchRouteImport } from './routes/api/public/cron/dispatch'
 import { Route as ApiPublicMailSendRouteImport } from './routes/api/public/mail/send'
 import { Route as ApiPublicMailTestRouteImport } from './routes/api/public/mail/test'
+import { Route as ApiPublicMailTestSendRouteImport } from './routes/api/public/mail/test-send'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const ApiPublicMailTestRoute = ApiPublicMailTestRouteImport.update({
   path: '/api/public/mail/test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMailTestSendRoute = ApiPublicMailTestSendRouteImport.update({
+  id: '/api/public/mail/test-send',
+  path: '/api/public/mail/test-send',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/dispatch': typeof ApiPublicCronDispatchRoute
   '/api/public/mail/send': typeof ApiPublicMailSendRoute
   '/api/public/mail/test': typeof ApiPublicMailTestRoute
+  '/api/public/mail/test-send': typeof ApiPublicMailTestSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/dispatch': typeof ApiPublicCronDispatchRoute
   '/api/public/mail/send': typeof ApiPublicMailSendRoute
   '/api/public/mail/test': typeof ApiPublicMailTestRoute
+  '/api/public/mail/test-send': typeof ApiPublicMailTestSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/api/public/cron/dispatch': typeof ApiPublicCronDispatchRoute
   '/api/public/mail/send': typeof ApiPublicMailSendRoute
   '/api/public/mail/test': typeof ApiPublicMailTestRoute
+  '/api/public/mail/test-send': typeof ApiPublicMailTestSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/dispatch'
     | '/api/public/mail/send'
     | '/api/public/mail/test'
+    | '/api/public/mail/test-send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/dispatch'
     | '/api/public/mail/send'
     | '/api/public/mail/test'
+    | '/api/public/mail/test-send'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/dispatch'
     | '/api/public/mail/send'
     | '/api/public/mail/test'
+    | '/api/public/mail/test-send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   ApiPublicCronDispatchRoute: typeof ApiPublicCronDispatchRoute
   ApiPublicMailSendRoute: typeof ApiPublicMailSendRoute
   ApiPublicMailTestRoute: typeof ApiPublicMailTestRoute
+  ApiPublicMailTestSendRoute: typeof ApiPublicMailTestSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMailTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mail/test-send': {
+      id: '/api/public/mail/test-send'
+      path: '/api/public/mail/test-send'
+      fullPath: '/api/public/mail/test-send'
+      preLoaderRoute: typeof ApiPublicMailTestSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronDispatchRoute: ApiPublicCronDispatchRoute,
   ApiPublicMailSendRoute: ApiPublicMailSendRoute,
   ApiPublicMailTestRoute: ApiPublicMailTestRoute,
+  ApiPublicMailTestSendRoute: ApiPublicMailTestSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
