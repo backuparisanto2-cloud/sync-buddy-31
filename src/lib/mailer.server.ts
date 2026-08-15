@@ -1,5 +1,12 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { sendMail, testSmtp, type SmtpConfig } from "./smtp.server";
+import { sendMail, SmtpError, testSmtp, type SmtpConfig } from "./smtp.server";
+
+function errorDetail(e: unknown) {
+  if (e instanceof SmtpError) {
+    return { smtp_code: e.code || null, smtp_response: e.response || null, smtp_stage: e.stage };
+  }
+  return { smtp_code: null, smtp_response: null, smtp_stage: null };
+}
 import { occurrencesFor, type ScheduleRow } from "./schedule";
 
 export { occurrencesFor, zonedToUtc } from "./schedule";
@@ -86,7 +93,7 @@ export async function loadSmtp(profileId: string | null): Promise<
 
 export async function runSmtpTest(profileId: string) {
   const cfg = await loadSmtp(profileId);
-  let status = "Succeeded";
+  let status = "success";
   try {
     await testSmtp(cfg);
   } catch (e) {
@@ -138,6 +145,7 @@ export async function sendReminder(
     trigger_source: opts.source,
   };
 
+  const startedAt = Date.now();
   try {
     const cfg = await loadSmtp(reminder.smtp_profile_id);
     const attachments = await loadAttachments(reminder.id);
@@ -150,18 +158,31 @@ export async function sendReminder(
       body: reminder.body,
       attachments,
     });
-    await sendMail(cfg, {
+    const reply = await sendMail(cfg, {
       from: cfg.from_email,
       to: reminder.to_emails ?? [],
       cc: reminder.cc_emails ?? [],
       bcc: reminder.bcc_emails ?? [],
       raw,
     });
-    await supabaseAdmin.from("send_logs").insert({ ...logBase, status: "success" });
+    await supabaseAdmin.from("send_logs").insert({
+      ...logBase,
+      status: "success",
+      smtp_code: reply.code,
+      smtp_response: reply.response,
+      smtp_stage: reply.stage,
+      duration_ms: Date.now() - startedAt,
+    });
     return { ok: true as const };
   } catch (e) {
     const message = (e as Error).message ?? "Gagal mengirim";
-    await supabaseAdmin.from("send_logs").insert({ ...logBase, status: "failed", error: message });
+    await supabaseAdmin.from("send_logs").insert({
+      ...logBase,
+      status: "failed",
+      error: message,
+      ...errorDetail(e),
+      duration_ms: Date.now() - startedAt,
+    });
     return { ok: false as const, error: message };
   }
 }
@@ -180,6 +201,7 @@ export async function sendTestEmail(profileId: string, to: string) {
     recipients: to,
     trigger_source: "test" as const,
   };
+  const startedAt = Date.now();
   try {
     const raw = buildMime({
       from: cfg.from_email,
@@ -189,8 +211,15 @@ export async function sendTestEmail(profileId: string, to: string) {
       body,
       attachments: [],
     });
-    await sendMail(cfg, { from: cfg.from_email, to: [to], raw });
-    await supabaseAdmin.from("send_logs").insert({ ...logBase, status: "success" });
+    const reply = await sendMail(cfg, { from: cfg.from_email, to: [to], raw });
+    await supabaseAdmin.from("send_logs").insert({
+      ...logBase,
+      status: "success",
+      smtp_code: reply.code,
+      smtp_response: reply.response,
+      smtp_stage: reply.stage,
+      duration_ms: Date.now() - startedAt,
+    });
     await supabaseAdmin
       .from("smtp_profiles")
       .update({ last_status: "success", last_tested_at: new Date().toISOString() })
@@ -198,7 +227,13 @@ export async function sendTestEmail(profileId: string, to: string) {
     return { ok: true as const };
   } catch (e) {
     const message = (e as Error).message ?? "Gagal mengirim";
-    await supabaseAdmin.from("send_logs").insert({ ...logBase, status: "failed", error: message });
+    await supabaseAdmin.from("send_logs").insert({
+      ...logBase,
+      status: "failed",
+      error: message,
+      ...errorDetail(e),
+      duration_ms: Date.now() - startedAt,
+    });
     return { ok: false as const, error: message };
   }
 }
