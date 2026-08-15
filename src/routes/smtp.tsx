@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@/lib/app.functions";
-import { CheckCircle2, Loader2, Plus, Server, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Plus, Send, Server, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   fetchSmtpProfiles,
   removeSmtpProfile,
   testSmtpProfile,
+  sendTestEmailNow,
   upsertSmtpProfile,
 } from "@/lib/app.functions";
 import { formatDateTime } from "@/lib/format";
@@ -73,6 +74,9 @@ function SmtpPage() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
+  const [sending, setSending] = useState<string | null>(null);
+  const [testTo, setTestTo] = useState<Record<string, string>>({});
+  const sendTest = useServerFn(sendTestEmailNow);
 
   const profiles = useQuery({ queryKey: ["smtp"], queryFn: () => list() });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
@@ -291,7 +295,48 @@ function SmtpPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+                <div className="col-span-2 flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center">
+                  <Input
+                    type="email"
+                    placeholder="email tujuan untuk uji kirim"
+                    value={testTo[p.id] ?? ""}
+                    onChange={(e) => setTestTo({ ...testTo, [p.id]: e.target.value })}
+                    className="sm:max-w-xs"
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="rounded-full"
+                    disabled={sending === p.id}
+                    onClick={async () => {
+                      const to = (testTo[p.id] ?? "").trim();
+                      if (!to) {
+                        toast.error("Isi alamat email tujuan dulu");
+                        return;
+                      }
+                      setSending(p.id);
+                      try {
+                        const res = await sendTest({ data: { id: p.id, to } });
+                        if (res.ok) toast.success(`Email uji terkirim ke ${to}`);
+                        else toast.error(res.error ?? "Gagal mengirim email uji");
+                      } catch (e) {
+                        toast.error((e as Error).message);
+                      } finally {
+                        setSending(null);
+                        qc.invalidateQueries({ queryKey: ["smtp"] });
+                      }
+                    }}
+                  >
+                    {sending === p.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    Kirim email uji
+                  </Button>
+                </div>
               </CardContent>
+
             </Card>
           ))}
           {profiles.data?.length === 0 ? (

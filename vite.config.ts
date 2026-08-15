@@ -6,10 +6,16 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// `bun run build:static` (STATIC_BUILD=1) menghasilkan build SPA statis di .output/public
+// untuk di-upload ke web hosting biasa. Build normal Lovable tidak terpengaruh.
+const staticBuild = process.env["STATIC_BUILD"] === "1";
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    ...(staticBuild ? { spa: { enabled: true }, prerender: { enabled: true } } : {}),
   },
 });
+

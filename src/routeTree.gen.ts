@@ -11,13 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as LogsRouteImport } from './routes/logs'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SmtpRouteImport } from './routes/smtp'
 import { Route as RemindersIdRouteImport } from './routes/reminders/$id'
 import { Route as RemindersNewRouteImport } from './routes/reminders/new'
 import { Route as ApiPublicCronDispatchRouteImport } from './routes/api/public/cron/dispatch'
 import { Route as ApiPublicMailSendRouteImport } from './routes/api/public/mail/send'
 import { Route as ApiPublicMailTestRouteImport } from './routes/api/public/mail/test'
+import { Route as ApiPublicMailTestSendRouteImport } from './routes/api/public/mail/test-send'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +32,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeployRoute = DeployRouteImport.update({
+  id: '/deploy',
+  path: '/deploy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogsRoute = LogsRouteImport.update({
   id: '/logs',
   path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SmtpRoute = SmtpRouteImport.update({
@@ -64,87 +77,113 @@ const ApiPublicMailTestRoute = ApiPublicMailTestRouteImport.update({
   path: '/api/public/mail/test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMailTestSendRoute = ApiPublicMailTestSendRouteImport.update({
+  id: '/api/public/mail/test-send',
+  path: '/api/public/mail/test-send',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/deploy': typeof DeployRoute
   '/logs': typeof LogsRoute
+  '/settings': typeof SettingsRoute
   '/smtp': typeof SmtpRoute
   '/reminders/$id': typeof RemindersIdRoute
   '/reminders/new': typeof RemindersNewRoute
   '/api/public/cron/dispatch': typeof ApiPublicCronDispatchRoute
   '/api/public/mail/send': typeof ApiPublicMailSendRoute
   '/api/public/mail/test': typeof ApiPublicMailTestRoute
+  '/api/public/mail/test-send': typeof ApiPublicMailTestSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/deploy': typeof DeployRoute
   '/logs': typeof LogsRoute
+  '/settings': typeof SettingsRoute
   '/smtp': typeof SmtpRoute
   '/reminders/$id': typeof RemindersIdRoute
   '/reminders/new': typeof RemindersNewRoute
   '/api/public/cron/dispatch': typeof ApiPublicCronDispatchRoute
   '/api/public/mail/send': typeof ApiPublicMailSendRoute
   '/api/public/mail/test': typeof ApiPublicMailTestRoute
+  '/api/public/mail/test-send': typeof ApiPublicMailTestSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/deploy': typeof DeployRoute
   '/logs': typeof LogsRoute
+  '/settings': typeof SettingsRoute
   '/smtp': typeof SmtpRoute
   '/reminders/$id': typeof RemindersIdRoute
   '/reminders/new': typeof RemindersNewRoute
   '/api/public/cron/dispatch': typeof ApiPublicCronDispatchRoute
   '/api/public/mail/send': typeof ApiPublicMailSendRoute
   '/api/public/mail/test': typeof ApiPublicMailTestRoute
+  '/api/public/mail/test-send': typeof ApiPublicMailTestSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/deploy'
     | '/logs'
+    | '/settings'
     | '/smtp'
     | '/reminders/$id'
     | '/reminders/new'
     | '/api/public/cron/dispatch'
     | '/api/public/mail/send'
     | '/api/public/mail/test'
+    | '/api/public/mail/test-send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/deploy'
     | '/logs'
+    | '/settings'
     | '/smtp'
     | '/reminders/$id'
     | '/reminders/new'
     | '/api/public/cron/dispatch'
     | '/api/public/mail/send'
     | '/api/public/mail/test'
+    | '/api/public/mail/test-send'
   id:
     | '__root__'
     | '/'
     | '/auth'
+    | '/deploy'
     | '/logs'
+    | '/settings'
     | '/smtp'
     | '/reminders/$id'
     | '/reminders/new'
     | '/api/public/cron/dispatch'
     | '/api/public/mail/send'
     | '/api/public/mail/test'
+    | '/api/public/mail/test-send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DeployRoute: typeof DeployRoute
   LogsRoute: typeof LogsRoute
+  SettingsRoute: typeof SettingsRoute
   SmtpRoute: typeof SmtpRoute
   RemindersIdRoute: typeof RemindersIdRoute
   RemindersNewRoute: typeof RemindersNewRoute
   ApiPublicCronDispatchRoute: typeof ApiPublicCronDispatchRoute
   ApiPublicMailSendRoute: typeof ApiPublicMailSendRoute
   ApiPublicMailTestRoute: typeof ApiPublicMailTestRoute
+  ApiPublicMailTestSendRoute: typeof ApiPublicMailTestSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -163,11 +202,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/deploy': {
+      id: '/deploy'
+      path: '/deploy'
+      fullPath: '/deploy'
+      preLoaderRoute: typeof DeployRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logs': {
       id: '/logs'
       path: '/logs'
       fullPath: '/logs'
       preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/smtp': {
@@ -212,19 +265,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMailTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mail/test-send': {
+      id: '/api/public/mail/test-send'
+      path: '/api/public/mail/test-send'
+      fullPath: '/api/public/mail/test-send'
+      preLoaderRoute: typeof ApiPublicMailTestSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DeployRoute: DeployRoute,
   LogsRoute: LogsRoute,
+  SettingsRoute: SettingsRoute,
   SmtpRoute: SmtpRoute,
   RemindersIdRoute: RemindersIdRoute,
   RemindersNewRoute: RemindersNewRoute,
   ApiPublicCronDispatchRoute: ApiPublicCronDispatchRoute,
   ApiPublicMailSendRoute: ApiPublicMailSendRoute,
   ApiPublicMailTestRoute: ApiPublicMailTestRoute,
+  ApiPublicMailTestSendRoute: ApiPublicMailTestSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

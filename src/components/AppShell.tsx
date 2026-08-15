@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { CalendarClock, History, LogOut, Mail, Server } from "lucide-react";
+import { CalendarClock, History, LogOut, Mail, Server, Settings, Rocket } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth";
@@ -9,7 +9,10 @@ const NAV = [
   { to: "/", label: "Dasbor", icon: CalendarClock },
   { to: "/smtp", label: "SMTP", icon: Server },
   { to: "/logs", label: "Riwayat", icon: History },
+  { to: "/settings", label: "Setelan", icon: Settings },
+  { to: "/deploy", label: "Deploy", icon: Rocket },
 ] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -90,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs text-muted-foreground sm:px-6">
-        Pengingat email terjadwal · zona waktu Asia/Jakarta
+        Pengingat email terjadwal · zona waktu dan interval diatur di halaman Setelan
       </footer>
     </div>
   );

@@ -264,3 +264,65 @@ export async function sendReminderNow({ data }: { data: { id: string } }) {
 export async function testSmtpProfile({ data }: { data: { id: string } }) {
   return callBackend<{ status: string }>("/api/public/mail/test", { id: data.id });
 }
+
+export async function sendTestEmailNow({ data }: { data: { id: string; to: string } }) {
+  return callBackend<{ ok: boolean; error?: string }>("/api/public/mail/test-send", {
+    id: data.id,
+    to: data.to,
+  });
+}
+
+/* ---- Pengaturan aplikasi (zona waktu default & interval penjadwal) ---- */
+
+export type AppSettings = {
+  id: string;
+  default_timezone: string;
+  check_interval_minutes: number;
+  catchup_hours: number;
+  scheduler_enabled: boolean;
+};
+
+export async function fetchSettings(): Promise<AppSettings> {
+  const row = unwrap(
+    await supabase
+      .from("app_settings")
+      .select("id, default_timezone, check_interval_minutes, catchup_hours, scheduler_enabled")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  );
+  if (row) return row as AppSettings;
+  const created = unwrap(
+    await supabase
+      .from("app_settings")
+      .insert({})
+      .select("id, default_timezone, check_interval_minutes, catchup_hours, scheduler_enabled")
+      .single(),
+  );
+  return created as AppSettings;
+}
+
+export async function saveSettings({
+  data,
+}: {
+  data: Omit<AppSettings, "id"> & { id: string };
+}) {
+  unwrap(
+    await supabase
+      .from("app_settings")
+      .update({
+        default_timezone: data.default_timezone,
+        check_interval_minutes: data.check_interval_minutes,
+        catchup_hours: data.catchup_hours,
+        scheduler_enabled: data.scheduler_enabled,
+      })
+      .eq("id", data.id)
+      .select("id"),
+  );
+
+  const { data: schedule, error } = await supabase.rpc("reschedule_dispatch", {
+    _minutes: data.check_interval_minutes,
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true, schedule: schedule as string };
+}
